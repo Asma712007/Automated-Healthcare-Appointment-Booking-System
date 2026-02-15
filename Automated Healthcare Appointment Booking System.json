@@ -1,0 +1,427 @@
+{
+  "name": "Automated Healthcare Appointment Booking System",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "14UNUaPS9P-9j-Gp0-zUwdNZD4eOeh4fs68OolZo6cMA",
+          "mode": "list",
+          "cachedResultName": "Healthcare Appointment Booking  (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14UNUaPS9P-9j-Gp0-zUwdNZD4eOeh4fs68OolZo6cMA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2079361502,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14UNUaPS9P-9j-Gp0-zUwdNZD4eOeh4fs68OolZo6cMA/edit#gid=2079361502"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        -208
+      ],
+      "id": "c6150ba1-368c-49a8-9c2e-1351992320f0",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "kC2B0d2GqeFqAEi1",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d185078-11a0-45ac-8b30-258ed710d788",
+              "name": "appointment_datetime",
+              "value": "={{ ($json[\"Preferred Appointment Date\"] + \" \" + $json[\"Preferred Appointment Time\"]).trim() }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -144,
+        -208
+      ],
+      "id": "4ee48798-38ba-4e6b-aaff-e981a070c6a8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const start = new Date($json.appointment_datetime);\n\n// Safety check\nif (isNaN(start.getTime())) {\n  throw new Error(\"Invalid appointment_datetime format\");\n}\n\n// 30-minute appointment\nconst end = new Date(start.getTime() + 30 * 60 * 1000);\n\nreturn [{\n  ...$json,\n  startISO: start.toISOString(),\n  endISO: end.toISOString()\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -208
+      ],
+      "id": "9bfc1bed-df61-4890-9cc0-6f54780c5ffd",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "calendar",
+        "calendar": {
+          "__rl": true,
+          "value": "9681d3487e8781a98843cf5a71b559bf92bd453dfe972bbc7ad7e28b3fdf1f67@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Healthcare Appointments"
+        },
+        "options": {
+          "timezone": {
+            "__rl": true,
+            "value": "America/Port_of_Spain",
+            "mode": "list",
+            "cachedResultName": "America/Port_of_Spain"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        -208
+      ],
+      "id": "76ec25d4-8249-4128-bae1-3729cfc067f7",
+      "name": "Get availability in a calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "6OMe0scolEnuwx5l",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f3a470d9-d54c-44f8-a100-eaefe74eddd0",
+              "leftValue": "={{ $json.available }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        -208
+      ],
+      "id": "dd8b2690-d47d-4137-a732-fc8302626fed",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "9681d3487e8781a98843cf5a71b559bf92bd453dfe972bbc7ad7e28b3fdf1f67@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "Healthcare Appointments"
+        },
+        "start": "=2026-01-29T20:21:30.867+01:00",
+        "end": "=2026-01-29T20:51:30.867+01:00",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        -336
+      ],
+      "id": "fda2f637-8b5c-4c4e-8933-78c051e11bab",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "6OMe0scolEnuwx5l",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json['Email Address'] }}",
+        "subject": "Appointment not available",
+        "emailType": "text",
+        "message": "=Hi {{ $('Google Sheets Trigger').item.json['Patient Name'] }},  Sorry — the time you selected is no longer available.  Please submit the form again and choose a different time.  Thanks, Healthcare Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        -64
+      ],
+      "id": "54747ec2-7136-449d-8e76-41299a99b7ba",
+      "name": "Send a message",
+      "webhookId": "398a04f8-fbc4-444d-b0a4-1163e34b721d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "o8kZhdEIwVdmsrWE",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Google Sheets Trigger').item.json['Email Address'] }}",
+        "subject": "Your appointment is confirmed",
+        "emailType": "text",
+        "message": "=Hi {{ $('Google Sheets Trigger').item.json['Patient Name'] }},  Your appointment has been successfully booked.  🗓 Date: {{ $('Google Sheets Trigger').item.json['Preferred Appointment Date'] }} ⏰ Time: {{ $('Google Sheets Trigger').item.json['Preferred Appointment Time'] }}  If you need to reschedule, please reply to this email.  Thank you, Healthcare Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        -336
+      ],
+      "id": "a68673c7-4ad4-4f2e-80b5-f0283e1f43c0",
+      "name": "Send a message1",
+      "webhookId": "6c2854c5-e6ea-4d4f-bb5d-88490c24e8b9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "o8kZhdEIwVdmsrWE",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Cm0jqBlSKn0r3mTgfOu_oq8nvoAyTFSwrW6EW0iwJfg",
+          "mode": "list",
+          "cachedResultName": "Healthcare Bookings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Cm0jqBlSKn0r3mTgfOu_oq8nvoAyTFSwrW6EW0iwJfg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Cm0jqBlSKn0r3mTgfOu_oq8nvoAyTFSwrW6EW0iwJfg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Patient Name": "={{ $('Google Sheets Trigger').item.json['Patient Name'] }}",
+            "Email ": "={{ $('Google Sheets Trigger').item.json['Email Address'] }}",
+            "Date ": "={{ $('Google Sheets Trigger').item.json['Preferred Appointment Date'] }}",
+            "Time ": "={{ $('Google Sheets Trigger').item.json['Preferred Appointment Time'] }}",
+            " Event ID": "={{ $json.id }}",
+            "Created At": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Patient Name",
+              "displayName": "Patient Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email ",
+              "displayName": "Email ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date ",
+              "displayName": "Date ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time ",
+              "displayName": "Time ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": " Event ID",
+              "displayName": " Event ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        -336
+      ],
+      "id": "e8f56c1c-0761-4d7f-b5e0-ac01ae6b6694",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "oIWlq5rZ9G7Ewrhr",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get availability in a calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get availability in a calendar": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "e02141bb-4f42-41f1-a454-f609c23259a7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "51534b3fab21b122f914a2f51ab81d70ec9359de9dcd655f36b2af50be94c289"
+  },
+  "id": "zyjKVwCIiCev7QFO7S-YP",
+  "tags": []
+}
